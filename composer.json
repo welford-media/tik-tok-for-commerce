@@ -1,0 +1,46 @@
+{
+  "name": "welford-media/craft-tik-tok-for-commerce",
+  "description": "Provides integration for TikTok shops with Craft Commerce.",
+  "type": "craft-plugin",
+  "license": "proprietary",
+  "support": {
+    "email": "hello@welfordmedia.co.uk"
+  },
+  "require": {
+    "php": ">=8.0.2",
+    "craftcms/cms": "^4.11.0",
+    "craftcms/commerce": "^4.6.0",
+    "ecomphp/tiktokshop-php": "^2.5"
+  },
+  "require-dev": {
+    "craftcms/ecs": "dev-main",
+    "craftcms/phpstan": "dev-main"
+  },
+  "autoload": {
+    "psr-4": {
+      "WelfordMedia\\CraftTikTok\\": "src/"
+    }
+  },
+  "extra": {
+    "handle": "tik-tok-for-commerce",
+    "name": "TikTok for Commerce",
+    "developer": "Welford Media",
+    "documentationUrl": "",
+    "class": "WelfordMedia\\CraftTikTok\\TikTok"
+  },
+  "scripts": {
+    "check-cs": "ecs check --ansi",
+    "fix-cs": "ecs check --ansi --fix",
+    "phpstan": "phpstan --memory-limit=1G"
+  },
+  "config": {
+    "sort-packages": true,
+    "platform": {
+      "php": "8.0.2"
+    },
+    "allow-plugins": {
+      "yiisoft/yii2-composer": true,
+      "craftcms/plugin-installer": true
+    }
+  }
+}

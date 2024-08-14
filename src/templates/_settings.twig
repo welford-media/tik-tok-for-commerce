@@ -1,0 +1,64 @@
+{# @var plugin \WelfordMedia\CraftTikTok\TikTok #}
+{# @var settings \WelfordMedia\CraftTikTok\models\Settings #}
+
+{% import '_includes/forms.twig' as forms %}
+
+{% set canConnect = (settings.app_key is not empty and settings.app_secret is not empty) %}
+
+<script>
+const startAuth = () => {
+  window.location.href = `{{cpUrl("tik-tok-for-commerce/auth/start")}}`;
+}
+</script>
+
+{{ forms.autosuggestField({
+    label: "App Key",
+    instructions: "Your TikTok app key as provided by your private TikTok app.",
+    id: 'app_key',
+    name: 'app_key',
+    value: settings.app_key,
+    errors: settings.getErrors('app_key'),
+    suggestEnvVars: true,
+    autofocus: true,
+}) }}
+
+{{ forms.autosuggestField({
+    label: "App Secret",
+    instructions: "Your TikTok app secret as provided by your private TikTok app.",
+    id: 'app_secret',
+    name: 'app_secret',
+    value: settings.app_secret,
+    errors: settings.getErrors('app_secret'),
+    suggestEnvVars: true,
+    autofocus: true,
+}) }}
+
+<button type="button" class="btn {% if not canConnect %} disabled {% endif %}" onclick="startAuth()" {% if not canConnect %} disabled {% endif %}>Connect to TikTok</button>
+
+<div class="field">
+    <div class="heading">
+        <label>TikTok Shop</label>
+    </div>
+    <div class="instructions">
+        <p>Select the TikTok shop you would like to use. Please note that this setting will not be available until you have successfully connected to the TikTok API.</p>
+    </div>
+    {{ forms.select({
+        label: "TikTok Shop",
+        name: 'shop_cipher',
+        value: settings.shop_cipher,
+        options: settings.shops,
+    }) }}
+</div>
+
+<div class="field">
+    <div class="heading">
+        <label>Draft Mode</label>
+    </div>
+    <div class="instructions">
+        <p>Draft Mode will prevent the plugin from creating listed products in your TikTok shop. Instead products will be uploaded as drafts. This is useful for testing and reviewing products before making them live.</span>
+    </div>
+    {{ forms.lightswitch({
+        name: 'draft_mode',
+        value: settings.draft_mode,
+    }) }}
+</div>

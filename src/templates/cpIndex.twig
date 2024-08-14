@@ -1,0 +1,96 @@
+{% extends "_layouts/cp.twig" %}
+{% set title = "TikTok for Commerce" %}
+
+{% block content %}
+  <script>
+    const add = () => {
+        const index = document.querySelectorAll('#add-container > div').length;
+        const addContainer = document.getElementById('add-container');
+        const newMapping = document.createElement('div');
+        newMapping.innerHTML = `
+            <div style="margin: 10px;">
+              <div class="field">
+                  <div class="heading">
+                    <label for="product_type">Product Type</label>
+                  </div>
+                  <div class="select">
+                    <select name="product_type[${index}]" id="product_type">
+                        {% for product_type in product_types %}
+                            <option value="{{ product_type.handle }}">{{ product_type.name }}</option>
+                        {% endfor %}
+                    </select>
+                  </div>
+              </div>
+              <div class="field">
+                  <div class="heading">
+                    <label for="category">Category</label>
+                  </div>
+                  <div class="select">
+                    <select name="category[${index}]" id="category">
+                        {% for id, category in categories %}
+                            <option value="{{ id }}">{{ category }}</option>
+                        {% endfor %}
+                    </select>
+                  </div>
+              </div>
+              <button type="button" class="btn icon delete" onclick="this.parentElement.parentElement.remove()">Delete</button>
+            </div>
+            <hr />
+        `;
+        addContainer.appendChild(newMapping);
+    }
+  </script>
+  {% if product_types is not empty %}
+    {% if categories is not empty %}
+        <h2>Product Type Mappings</h2>
+        <hr />
+        <form method="POST" id="mapping-form">
+            {{ csrfInput() }}
+            {{ actionInput('tik-tok-for-commerce/cp/save') }}
+            <div id="add-container">
+                {% for handle, tikTokCategoryId in mappings %}
+                <div style="margin: 10px;">
+                  <div class="field">
+                      <div class="heading">
+                        <label for="product_type">Product Type</label>
+                      </div>
+                      <div class="select">
+                          <select name="product_type[{{loop.index0}}]" id="product_type">
+                            {% for product_type in product_types %}
+                                <option value="{{ product_type.handle }}" {% if handle == product_type.handle %}selected{% endif %}>{{ product_type.name }}</option>
+                            {% endfor %}
+                        </select>
+                      </div>
+                  </div>
+                  <div class="field">
+                      <div class="heading">
+                        <label for="category">Category</label>
+                      </div>
+                      <div class="select">
+                        <select name="category[{{loop.index0}}]" id="category">
+                            {% for id, category in categories %}
+                                <option value="{{ id }}" {% if tikTokCategoryId == id %}selected{% endif %}>{{ category }}</option>
+                            {% endfor %}
+                        </select>
+                      </div>
+                  </div>
+                  <button type="button" class="btn icon delete" onclick="this.parentElement.parentElement.remove()">Delete</button>
+                </div>
+                <hr />
+                {% endfor %}
+            </div>
+            <div>
+                <button type="button" class="btn icon add" onclick="add()">New Mapping</button>
+            </div>
+        </form>
+        <hr />
+        <div>
+            <input type="submit" class="btn submit" value="Save" onclick="document.querySelector('#mapping-form').submit()">
+        </div>
+    {% else %}
+      <h3>The plugin could not get the full category listing from TikTok. Have you connected the plugin to your store yet?</h3>
+    {% endif %}
+  {% else %}
+    <h3>You need to setup some product types before attempting to configure the plugin!</h3>
+  {% endif %}
+{% endblock %}
