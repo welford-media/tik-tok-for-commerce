@@ -71,15 +71,12 @@ Now select the shop you wish to connect to from the plugin settings page and pre
 Once you have completed the above steps, you can now configure your products to sync with your TikTok shop.
 
 To enable a product or specific variant to sync with TikTok you must:
- - Create a new lightsitch field with the handle `tiktokSync`. If you would automatically like to sync all variants, you can set the default value of this field to on. Apply this field to your product or variant fields.
- - Create a new plain text field with the handle `tiktokDescription`. Apply this field to your product or variant fields. If you choose to add a field to your product and your variant fields, the two will be concatenated when syncing to TikTok, with the product field being first.
  - Create a new asset field with the handle `tiktokImage`. The field show only allow one image to be selected, and ensure the type is set to Image only. **TikTok only supports JPG and PNG images at this time.** Apply this field to your product or variant fields.
 
  You must also create two additional fields which have been built specifically for the plugin:
- - Create a new TikTok Category field with the handle `tiktokCategory`. This field allowss you to link your products and variants to the correct TikTok category. Apply this field to your product or variant fields.
- - Create a new TikTok Warehouse field with the handle `tiktokWarehouse`. This field allows you to link your product to the correct TikTok warehouse that it is stored in. Apply this field to your product or variant fields.
+ - Create a new TikTok Fields field. This field provides the functionality required for the plugin to sync your product with TikTok. Apply this field to your product or variant fields.
 
- Now that your fields are complete, work through your products and variants and ensure that the fields are populated with the correct information. Upon saving each product, it will be automatically synced to your TikTok shop.
+ Now that your fields are complete, work through your products and variants and ensure that the TikTok Fields options are populated with the correct information. Upon saving each product, it will be automatically synced to your TikTok shop.
 
 ### Order Sync
 
