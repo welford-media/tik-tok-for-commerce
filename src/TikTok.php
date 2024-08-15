@@ -96,7 +96,7 @@ class TikTok extends Plugin
                     ])
                 );
             } else {
-                $tikTokId = TikTok::getInstance()->mapping->getMappingByVariantId(
+                $tikTokId = TikTok::getInstance()->mapping->getVariantMapping(
                     $variant->id
                 );
                 if ($tikTokId) {
