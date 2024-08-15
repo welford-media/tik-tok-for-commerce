@@ -95,6 +95,17 @@ class TikTok extends Plugin
                         "id" => $variant->id,
                     ])
                 );
+            } else {
+                $tikTokId = TikTok::getInstance()->mapping->getMappingByVariantId(
+                    $variant->id
+                );
+                if ($tikTokId) {
+                    Craft::$app->getQueue()->push(
+                        new DeSyncProduct([
+                            "id" => $variant->id,
+                        ])
+                    );
+                }
             }
         });
 
