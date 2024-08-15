@@ -5,6 +5,7 @@ namespace WelfordMedia\CraftTikTok;
 use Craft;
 use WelfordMedia\CraftTikTok\fields\TikTokCategory;
 use WelfordMedia\CraftTikTok\fields\TikTokOrderId;
+use WelfordMedia\CraftTikTok\fields\TikTokFields;
 use WelfordMedia\CraftTikTok\fields\TikTokWarehouse;
 use WelfordMedia\CraftTikTok\jobs\DeSyncProduct;
 use WelfordMedia\CraftTikTok\jobs\SyncProduct;
@@ -19,6 +20,7 @@ use craft\events\RegisterUrlRulesEvent;
 use craft\services\Fields;
 use craft\web\UrlManager;
 use craft\web\View;
+use WelfordMedia\CraftTikTok\helpers\CommerceHelpers;
 
 use yii\base\Event;
 
@@ -86,20 +88,23 @@ class TikTok extends Plugin
         ) {
             $variant = $event->sender;
             $product = $variant->getProduct();
-            if (
-                (isset($variant->tiktokSync) && $variant->tiktokSync) ||
-                (isset($product->tiktokSync) && $product->tiktokSync)
-            ) {
-                Craft::$app->getQueue()->push(
-                    new SyncProduct([
-                        "id" => $variant->id,
-                    ])
-                );
-            } else {
-                $tikTokId = TikTok::getInstance()->mapping->getVariantMapping(
-                    $variant->id
-                );
-                if ($tikTokId) {
+
+            // Check if craft is running in the CLI or queue
+            if (Craft::$app->getRequest()->isConsoleRequest) {
+                return;
+            }
+
+            $fields =
+                CommerceHelpers::getElementsTikTokFieldValues($variant) ??
+                CommerceHelpers::getElementsTikTokFieldValues($product);
+            if (isset($fields) && is_array($fields) && !empty($fields)) {
+                if (isset($fields["enabled"]) && !empty($fields["enabled"])) {
+                    Craft::$app->getQueue()->push(
+                        new SyncProduct([
+                            "id" => $variant->id,
+                        ])
+                    );
+                } else {
                     Craft::$app->getQueue()->push(
                         new DeSyncProduct([
                             "id" => $variant->id,
@@ -177,6 +182,7 @@ class TikTok extends Plugin
             $event->types[] = TikTokWarehouse::class;
             $event->types[] = TikTokCategory::class;
             $event->types[] = TikTokOrderId::class;
+            $event->types[] = TikTokFields::class;
         });
     }
 }

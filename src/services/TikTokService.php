@@ -13,6 +13,7 @@ use EcomPHP\TiktokShop\Webhook;
 use craft\elements\Asset;
 use WelfordMedia\CraftTikTok\jobs\SyncProduct;
 use craft\commerce\Plugin as Commerce;
+use WelfordMedia\CraftTikTok\helpers\CommerceHelpers;
 
 class TikTokService extends Component
 {
@@ -129,27 +130,31 @@ class TikTokService extends Component
         if (!$variant) {
             throw new \Exception("Variant not found");
         }
-
-        $mapping_service = TikTok::getInstance()->mapping;
         $product = $variant->getProduct();
 
-        $tiktokProductId = $mapping_service->getVariantMapping($variant->id);
-        $category_mapping =
-            $variant->tiktokCategory ?? ($product->tiktokCategory ?? null);
+        $variantsTikTokField = CommerceHelpers::getElementsTikTokFieldValues(
+            $variant
+        );
+        $productsTikTokField = CommerceHelpers::getElementsTikTokFieldValues(
+            $product
+        );
 
-        $this->validateSyncProduct($variant, $product, $category_mapping);
-
-        $description = $this->getDescription($product, $variant);
-        $imageAsset = $this->getImageAsset($variant, $product);
-        $warehouse =
-            $variant->tiktokWarehouse ?? ($product->tiktokWarehouse ?? null);
-
-        if (!$warehouse) {
+        if ($variantsTikTokField === false && $productsTikTokField === false) {
             throw new \Exception(
-                "No warehouse selected for the variant or product. You must setup a TikTok Warehouse field with the handle tiktokWarehouse on your product or variant and ensure that you select the correct warehouse for the product or variant."
+                "No TikTok fields found on the variant or product. You must setup a TikTok field with the handle tiktok on your product or variant."
             );
         }
 
+        $tikTokSyncInfo = $this->validateSyncProduct(
+            $variantsTikTokField,
+            $productsTikTokField
+        );
+
+        $tikTokProductId = (string) TikTok::getInstance()->mapping->getVariantMapping(
+            $variant->id
+        );
+
+        $imageAsset = $this->getImageAsset($variant, $product);
         $stream = $imageAsset->getStream();
         $image_response = $this->client->Product->uploadProductImage($stream);
 
@@ -165,7 +170,8 @@ class TikTokService extends Component
             [
                 "inventory" => [
                     [
-                        "warehouse_id" => $warehouse,
+                        "warehouse_id" =>
+                            (string) $tikTokSyncInfo["warehouseId"],
                         "quantity" => $variant->stock,
                     ],
                 ],
@@ -180,8 +186,8 @@ class TikTokService extends Component
         $jsonData = [
             "title" => $variant->title ?? $product->title,
             "save_mode" => $this->settings->draft_mode ? "AS_DRAFT" : "LISTING",
-            "description" => "<p>" . $description . "</p>",
-            "category_id" => (string) $category_mapping,
+            "description" => (string) $tikTokSyncInfo["description"],
+            "category_id" => (string) $tikTokSyncInfo["categoryId"],
             "main_images" => [["uri" => $image_response["uri"]]],
             "skus" => $skus,
             "package_dimensions" => [
@@ -196,12 +202,21 @@ class TikTokService extends Component
             ],
         ];
 
-        $response = empty($tiktokProductId)
-            ? $this->client->Product->createProduct($jsonData)
-            : $this->client->Product->editProduct($tiktokProductId, $jsonData);
+        if (empty($tikTokProductId)) {
+            $response = $this->client->Product->createProduct($jsonData);
+        } else {
+            try {
+                $response = $this->client->Product->editProduct(
+                    $tikTokProductId,
+                    $jsonData
+                );
+            } catch (\Exception $e) {
+                $response = $this->client->Product->createProduct($jsonData);
+            }
+        }
 
         if (isset($response) && !empty($response["product_id"])) {
-            $mapping_service->saveVariantMapping(
+            TikTok::getInstance()->mapping->saveVariantMapping(
                 $variant->id,
                 $response["product_id"]
             );
@@ -215,21 +230,20 @@ class TikTokService extends Component
         $this->checkAuthenticated();
         $this->checkShopCipher();
 
-        $variant = Variant::find()->id($variantId)->one();
-        if (!$variant) {
-            throw new \Exception("Variant not found");
+        $tikTokProductId = TikTok::getInstance()->mapping->getVariantMapping(
+            $variantId
+        );
+
+        if (empty($tikTokProductId)) {
+            TikTok::getInstance()->mapping->deleteVariantMapping($variantId);
+            return;
         }
 
-        $mapping_service = TikTok::getInstance()->mapping;
-        $tiktokProductId = $mapping_service->getVariantMapping($variant->id);
-
-        if (empty($tiktokProductId)) {
-            throw new \Exception("Variant mapping not found");
-        }
-
-        $response = $this->client->Product->deleteProducts([$tiktokProductId]);
+        $response = $this->client->Product->deleteProducts([
+            (string) $tikTokProductId,
+        ]);
         if (isset($response)) {
-            $mapping_service->deleteVariantMapping($variant->id);
+            TikTok::getInstance()->mapping->deleteVariantMapping($variantId);
         }
     }
 
@@ -351,51 +365,43 @@ class TikTokService extends Component
     }
 
     private function validateSyncProduct(
-        Variant $variant,
-        Product $product,
-        string|int $category_mapping
-    ): void {
-        if (empty($category_mapping)) {
-            throw new \Exception(
-                "No TikTok category selected for the product type. You must setup a TikTok Category product field with the handle tiktokCategory for the product type."
-            );
-        }
+        array|bool $variantTikTokFields,
+        array|bool $productTikTokFields
+    ): array {
+        $combined = $productTikTokFields === false ? [] : $productTikTokFields;
 
-        if ($this->isDescriptionEmpty($variant, $product)) {
-            throw new \Exception(
-                "Description is required for the variant or the product. You must setup a single line text field with the handle tiktokDescription for your product and/or variant"
-            );
-        }
-
-        if (empty($variant->weight)) {
-            throw new \Exception("Weight is required for the variant.");
+        if ($variantTikTokFields !== false) {
+            foreach ($variantTikTokFields as $key => $value) {
+                if (!empty($value) || $value === "0" || $value === 0) {
+                    $combined[$key] = $value;
+                }
+            }
         }
 
         if (
-            empty($variant->length) ||
-            empty($variant->width) ||
-            empty($variant->height)
+            isset($productTikTokFields["description"]) &&
+            isset($variantTikTokFields["description"])
         ) {
-            throw new \Exception("Dimensions are required for the variant.");
+            $combined["description"] =
+                $productTikTokFields["description"] .
+                $variantTikTokFields["description"];
+        } elseif (isset($productTikTokFields["description"])) {
+            $combined["description"] = $productTikTokFields["description"];
+        } elseif (isset($variantTikTokFields["description"])) {
+            $combined["description"] = $variantTikTokFields["description"];
         }
-    }
 
-    private function isDescriptionEmpty(
-        Variant $variant,
-        Product $product
-    ): bool {
-        return empty($product->tiktokDescription) &&
-            empty($variant->tiktokDescription);
-    }
+        $requiredFields = ["categoryId", "description", "warehouseId"];
+        foreach ($requiredFields as $field) {
+            if (empty($combined[$field])) {
+                throw new \Exception(
+                    "The TikTok Fields are missing the required field: " .
+                        $field
+                );
+            }
+        }
 
-    private function getDescription(Product $product, Variant $variant): string
-    {
-        $description = array_filter([
-            $product->tiktokDescription ?? null,
-            $variant->tiktokDescription ?? null,
-        ]);
-
-        return !empty($description) ? implode("</p><p>", $description) : "";
+        return $combined;
     }
 
     private function getImageAsset(Variant $variant, Product $product): ?Asset
