@@ -123,6 +123,20 @@ class TikTokCategory extends Field
 
         // Create the remapped array
         foreach ($categories as $category) {
+            if (
+                in_array(
+                    "INVITE_ONLY",
+                    $category["permission_statuses"] ?? []
+                ) ||
+                in_array(
+                    "NON_MAIN_CATEGORY",
+                    $category["permission_statuses"] ?? []
+                ) ||
+                $category["is_leaf"] == false
+            ) {
+                continue;
+            }
+
             $categoryPath = buildCategoryPath($category, $categoryMap);
             $result[$category["id"]] = $categoryPath;
         }

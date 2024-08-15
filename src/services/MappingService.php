@@ -19,7 +19,7 @@ class MappingService extends Component
         return null;
     }
 
-    public function getTikTokProductMapping(int $id): int|null
+    public function getTikTokProductMapping(string $id): int|null
     {
         $record = VariantMapping::find()
             ->where(["tiktokProductId" => $id])
@@ -34,7 +34,7 @@ class MappingService extends Component
 
     public function saveVariantMapping(
         int $variant_id,
-        int $tiktok_product_id
+        string $tiktok_product_id
     ): void {
         $record = VariantMapping::find()
             ->where(["variantId" => $variant_id])

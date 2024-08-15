@@ -11,6 +11,7 @@ This plugin also requires specific configuration options within Craft Commerce:
 - Weight Unit - Must be set to Kilograms.
 - Dimension Units - Must be set to Centimeters.
 - Product Types - Must be set to display and use Dimension and Weight fields.
+- Products cannot be set to be unlimited stock.
 
 ---
 ## Installation

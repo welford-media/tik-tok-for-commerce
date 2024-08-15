@@ -12,14 +12,18 @@ use craft\commerce\elements\Product;
 use EcomPHP\TiktokShop\Webhook;
 use craft\elements\Asset;
 use WelfordMedia\CraftTikTok\jobs\SyncProduct;
+use craft\commerce\Plugin as Commerce;
 
 class TikTokService extends Component
 {
     private Client $client;
-    public Model $settings;
+    private Model $settings;
+    private string $currency;
 
     public function __construct()
     {
+        $paymentCurrenciesService = Commerce::getInstance()->paymentCurrencies;
+        $this->currency = $paymentCurrenciesService->primaryPaymentCurrencyIso;
         $this->settings = TikTok::getInstance()->getSettings();
         $this->client = new Client(
             App::parseEnv($this->settings->app_key),
@@ -160,28 +164,34 @@ class TikTokService extends Component
         $skus = [
             [
                 "inventory" => [
-                    "warehouse_id" => $warehouse,
-                    "quantity" => $variant->stock ?? 999999,
+                    [
+                        "warehouse_id" => $warehouse,
+                        "quantity" => $variant->stock,
+                    ],
                 ],
-                "seller_sku" => $variant->sku || $variant->id,
-                "price" => $variant->price,
+                "seller_sku" => (string) $variant->sku,
+                "price" => [
+                    "amount" => (string) $variant->price,
+                    "currency" => $this->currency,
+                ],
             ],
         ];
 
         $jsonData = [
+            "title" => $variant->title ?? $product->title,
             "save_mode" => $this->settings->draft_mode ? "AS_DRAFT" : "LISTING",
             "description" => "<p>" . $description . "</p>",
             "category_id" => (string) $category_mapping,
             "main_images" => [["uri" => $image_response["uri"]]],
             "skus" => $skus,
             "package_dimensions" => [
-                "length" => $variant->length,
-                "width" => $variant->width,
-                "height" => $variant->height,
+                "length" => (string) $variant->length,
+                "width" => (string) $variant->width,
+                "height" => (string) $variant->height,
                 "unit" => "CENTIMETER",
             ],
             "package_weight" => [
-                "value" => $variant->weight,
+                "value" => (string) $variant->weight,
                 "unit" => "KILOGRAM",
             ],
         ];
@@ -277,6 +287,8 @@ class TikTokService extends Component
                 ];
             }
         }
+
+        Craft::debug(print_r($this->settings->shops, true), __METHOD__);
 
         if (
             is_array($this->settings->shops) &&

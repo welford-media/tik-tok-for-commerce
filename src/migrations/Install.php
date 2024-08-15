@@ -47,8 +47,8 @@ class Install extends Migration
     {
         $this->archiveTableIfExists("{{%tiktok_variant_mapping}}");
         $this->createTable("{{%tiktok_variant_mapping}}", [
-            "variantId" => $this->integer()->notNull(),
-            "tiktokProductId" => $this->integer()->notNull(),
+            "variantId" => $this->bigInteger()->notNull(),
+            "tiktokProductId" => $this->string()->notNull(),
         ]);
     }
 
