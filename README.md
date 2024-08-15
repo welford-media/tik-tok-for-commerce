@@ -73,9 +73,7 @@ Once you have completed the above steps, you can now configure your products to 
 
 To enable a product or specific variant to sync with TikTok you must:
  - Create a new asset field with the handle `tiktokImage`. The field show only allow one image to be selected, and ensure the type is set to Image only. **TikTok only supports JPG and PNG images at this time.** Apply this field to your product or variant fields.
-
- You must also create two additional fields which have been built specifically for the plugin:
- - Create a new TikTok Fields field. You may name this field however you wish. This field provides the functionality required for the plugin to sync your product with TikTok. Apply this field to your product or variant fields.
+ - Create a new field using the custom field type `TikTok Fields`. You may name this field however you wish. This field provides the functionality required for the plugin to sync your product with TikTok. Apply this field to your product or variant fields.
 
  Now that your fields are complete, work through your products and variants and ensure that the TikTok Fields options are populated with the correct information. Upon saving each product, it will be automatically synced to your TikTok shop.
 
