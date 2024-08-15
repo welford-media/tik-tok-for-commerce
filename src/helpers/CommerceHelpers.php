@@ -2,9 +2,11 @@
 
 namespace WelfordMedia\CraftTikTok\helpers;
 
+use craft\commerce\elements\Order;
 use craft\commerce\elements\Variant;
 use craft\commerce\elements\Product;
 use WelfordMedia\CraftTikTok\fields\TikTokFields;
+use WelfordMedia\CraftTikTok\fields\TikTokOrderId;
 
 class CommerceHelpers
 {
@@ -54,6 +56,30 @@ class CommerceHelpers
                                 if (
                                     get_class($tab_element->getField()) ===
                                     TikTokFields::class
+                                ) {
+                                    return $tab_element->getField()->handle;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    public static function getElementsTikTokOrderIdHandle(Order $element): mixed
+    {
+        if (isset($element->fieldLayout->tabs)) {
+            if (is_array($element->fieldLayout->tabs)) {
+                foreach ($element->fieldLayout->tabs as $tab) {
+                    if (is_array($tab->getElements())) {
+                        foreach ($tab->getElements() as $tab_element) {
+                            if (method_exists($tab_element, "getField")) {
+                                $field = $tab_element->getField();
+                                if (
+                                    get_class($tab_element->getField()) ===
+                                    TikTokOrderId::class
                                 ) {
                                     return $tab_element->getField()->handle;
                                 }

@@ -2,6 +2,7 @@
 namespace WelfordMedia\CraftTikTok\services;
 
 use Craft;
+use WelfordMedia\CraftTikTok\helpers\CommerceHelpers;
 use craft\commerce\elements\Variant;
 use craft\commerce\models\LineItem;
 use yii\base\Component;
@@ -22,13 +23,14 @@ class CommerceService extends Component
             );
         }
 
+        $handle = CommerceHelpers::getElementsTikTokOrderIdHandle(new Order());
         $commerceOrder = Order::find()
-            ->tikTokOrderId($order_detail["order_id"])
+            ->where([$handle => $order_detail["order_id"]])
             ->one();
 
         if (!$commerceOrder) {
             $commerceOrder = new Order();
-            $commerceOrder->tikTokOrderId = $order_detail["order_id"];
+            $commerceOrder->setFieldValue($handle, $order_detail["order_id"]);
             Craft::$app->getElements()->saveElement($commerceOrder);
             foreach ($order_detail["line_items"] as $line) {
                 $variant_id = $mapping->getTikTokProductMapping(
