@@ -376,7 +376,7 @@ class TikTokService extends Component
             empty($variant->tiktokDescription);
     }
 
-    private function getDescription($product, $variant): string
+    private function getDescription(Product $product, Variant $variant): string
     {
         $description = array_filter([
             $product->tiktokDescription ?? null,
