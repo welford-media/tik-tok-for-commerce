@@ -179,8 +179,6 @@ class TikTok extends Plugin
         Event::on(Fields::class, Fields::EVENT_REGISTER_FIELD_TYPES, function (
             RegisterComponentTypesEvent $event
         ) {
-            $event->types[] = TikTokWarehouse::class;
-            $event->types[] = TikTokCategory::class;
             $event->types[] = TikTokOrderId::class;
             $event->types[] = TikTokFields::class;
         });
