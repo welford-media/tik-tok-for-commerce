@@ -58,44 +58,7 @@ class CommerceService extends Component
             case "ON_HOLD":
                 break;
             default:
-                $address = new \craft\elements\Address();
-                $address->addessLine1 =
-                    $order_detail["recipient_address"]["address_line1"];
-                $address->addessLine2 =
-                    $order_detail["recipient_address"]["address_line2"];
-                if (
-                    isset(
-                        $order_detail["recipient_address"]["district_info"]
-                    ) &&
-                    is_array(
-                        $order_detail["recipient_address"]["district_info"]
-                    )
-                ) {
-                    foreach (
-                        $order_detail["recipient_address"]["district_info"]
-                        as $info_level
-                    ) {
-                        if (
-                            isset($info_level["address_level_name"]) &&
-                            !empty($info_level["address_level_name"])
-                        ) {
-                            switch ($info_level["address_level_name"]) {
-                                case "city":
-                                case "district":
-                                case "county":
-                                case "state":
-                                    $address->administrativeArea .=
-                                        $info_level["address_name"] . ", ";
-                            }
-                        }
-                    }
-                }
-                $address->administrativeArea = rtrim(
-                    $address->administrativeArea,
-                    ", "
-                );
-                $address->postalCode = $order_detail["postal_code"];
-                $address->countryCode = $order_detail["region_code"];
+                $address = $this->createAddressFromOrderDetail($order_detail);
                 Craft::$app->getElements()->saveElement($address);
                 $commerceOrder->setBillingAddress($address);
                 $commerceOrder->setShippingAddress($address);
@@ -106,5 +69,53 @@ class CommerceService extends Component
                 $commerceOrder->markAsComplete();
                 break;
         }
+    }
+
+    /**
+     * @param array $order_detail
+     * @return \craft\elements\Address
+     */
+    private function createAddressFromOrderDetail(
+        array $order_detail
+    ): \craft\elements\Address {
+        $address = new \craft\elements\Address();
+        $address->addressLine1 =
+            $order_detail["recipient_address"]["address_line1"];
+        $address->addressLine2 =
+            $order_detail["recipient_address"]["address_line2"];
+
+        if (
+            isset($order_detail["recipient_address"]["district_info"]) &&
+            is_array($order_detail["recipient_address"]["district_info"])
+        ) {
+            foreach (
+                $order_detail["recipient_address"]["district_info"]
+                as $info_level
+            ) {
+                if (
+                    isset($info_level["address_level_name"]) &&
+                    !empty($info_level["address_level_name"])
+                ) {
+                    switch ($info_level["address_level_name"]) {
+                        case "city":
+                        case "district":
+                        case "county":
+                        case "state":
+                            $address->administrativeArea .=
+                                $info_level["address_name"] . ", ";
+                            break;
+                    }
+                }
+            }
+        }
+
+        $address->administrativeArea = rtrim(
+            $address->administrativeArea,
+            ", "
+        );
+        $address->postalCode = $order_detail["postal_code"];
+        $address->countryCode = $order_detail["region_code"];
+
+        return $address;
     }
 }
