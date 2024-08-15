@@ -83,7 +83,7 @@ To enable a product or specific variant to sync with TikTok you must:
 
 Orders made on TikTok can be automatically sent to Craft Commerce via a webhook. To enable this feature you will need to:
 - Have created your TikTok app and have provided your webhook URL as described above.
-- Create a new field using the custom field type `TikTok Order ID` that is provided by the plugin. This field allows you to link your Craft Commerce Order to the correct TikTok order. Apply this field to your order fields in the Commerce Order Fields settings.
+- Create a new field using the custom field type `TikTok Order ID` that is provided by the plugin. This field allows the plugin to link your Craft Commerce Order to the correct TikTok order. Apply this field to your order fields in the Commerce Order Fields settings.
 
 TikTok provides for a number of order statuses. These will be handled within Craft Commerce as follows:
 - UNPAID - These orders are synced to Craft Commerce and open orders, as though a user were browsing the site and added items to their cart but have not yet checked out.
